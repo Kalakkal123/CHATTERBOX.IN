@@ -13,7 +13,7 @@ import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/fi
 const firebaseConfig = {
   apiKey: "AIzaSyBCJI2YgCLUyI0U9ufRfCujRjDDTeP-lNY",
   authDomain: "kalakkal1-d6e19.firebaseapp.com",
-  databaseURL: "https://kalakkal1-d6e19-default-rtdb.firebaseio.com",
+  databaseURL: "https://kalakkal1-d6e19-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "kalakkal1-d6e19",
   storageBucket: "kalakkal1-d6e19.firebasestorage.app",
   messagingSenderId: "979373423767",
@@ -43,6 +43,7 @@ function sendMessage() {
 
   try {
     push(messagesRef, { text: msg, timestamp: Date.now() });
+    console.log("Message sent:", msg);
     input.value = "";
   } catch (err) {
     console.error("Error sending message:", err);

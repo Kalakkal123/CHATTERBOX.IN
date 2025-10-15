@@ -10,7 +10,6 @@ toggleBtn.addEventListener("click", () => {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
 
-// Your Firebase config (use your project’s config)
 const firebaseConfig = {
   apiKey: "AIzaSyBCJI2YgCLUyI0U9ufRfCujRjDDTeP-lNY",
   authDomain: "kalakkal1-d6e19.firebaseapp.com",
@@ -21,9 +20,15 @@ const firebaseConfig = {
   appId: "1:979373423767:web:52485a1a022670f2b6fdd2"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
+let app, database;
+try {
+  app = initializeApp(firebaseConfig);
+  database = getDatabase(app);
+  console.log("Firebase initialized successfully ✅");
+} catch (err) {
+  console.error("Firebase initialization error:", err);
+}
+
 const messagesRef = ref(database, 'messages');
 
 // ----------------- DOM Elements -----------------
@@ -32,24 +37,32 @@ const input = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
 
 // ----------------- Send Message -----------------
-sendBtn.addEventListener("click", () => {
+function sendMessage() {
   const msg = input.value.trim();
-  if (msg !== "") {
+  if (msg === "") return;
+
+  try {
     push(messagesRef, { text: msg, timestamp: Date.now() });
     input.value = "";
+  } catch (err) {
+    console.error("Error sending message:", err);
   }
-});
+}
 
+sendBtn.addEventListener("click", sendMessage);
 input.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") sendBtn.click();
+  if (e.key === "Enter") sendMessage();
 });
 
 // ----------------- Listen for Messages -----------------
 onChildAdded(messagesRef, (snapshot) => {
   const data = snapshot.val();
+  if (!data || !data.text) return;
+
   const div = document.createElement("div");
   div.className = "msg";
   div.textContent = data.text;
+
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 });

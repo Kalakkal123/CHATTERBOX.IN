@@ -1,0 +1,94 @@
+/* --- Root variables for light/dark mode --- */
+:root {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --input-bg: #f0f0f0;
+  --input-text: #000000;
+  --btn-bg: #0f9d58;
+  --btn-text: #ffffff;
+  --chat-bg: #e0e0e0;
+  --msg-bg: #d0d0d0;
+}
+
+[data-theme="dark"] {
+  --bg-color: #121212;
+  --text-color: #ffffff;
+  --input-bg: #1e1e1e;
+  --input-text: #ffffff;
+  --btn-bg: #0f9d58;
+  --btn-text: #ffffff;
+  --chat-bg: #1e1e1e;
+  --msg-bg: #333333;
+}
+
+/* --- General Styles --- */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+h1 { 
+  margin-bottom: 20px; 
+}
+
+#chatBox {
+  width: 90%;
+  max-width: 600px;
+  height: 400px;
+  border-radius: 10px;
+  border: 2px solid var(--text-color);
+  padding: 10px;
+  overflow-y: scroll;
+  margin-bottom: 10px;
+  background-color: var(--chat-bg);
+  transition: all 0.3s ease;
+}
+
+#messageInput {
+  width: 70%;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  margin-right: 10px;
+  transition: all 0.3s ease;
+}
+
+#sendBtn, #toggleThemeBtn {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#inputArea {
+  display: flex;
+  width: 90%;
+  max-width: 600px;
+  margin-bottom: 20px;
+}
+
+.msg {
+  margin: 5px 0;
+  padding: 5px 10px;
+  background-color: var(--msg-bg);
+  border-radius: 5px;
+  max-width: 80%;
+  word-wrap: break-word;
+  transition: all 0.3s ease;
+}
+
+#toggleThemeBtn {
+  margin-bottom: 20px;
+}

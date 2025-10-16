@@ -153,6 +153,7 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
 }
 
 #usernameModal .modal-inner {
@@ -188,6 +189,58 @@ h1 {
 
 #setNameBtn:hover {
   background: #0d7f48;
+}
+
+/* --- Admin Panel Modal --- */
+#adminPanel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+#adminPanel .modal-inner {
+  background: var(--bg-color);
+  color: var(--text-color);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  width: 90%;
+  max-width: 350px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#adminPanel button {
+  padding: 10px 15px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#adminPanel button:hover {
+  background-color: #0d7f48;
+}
+
+#announcementInput {
+  padding: 8px;
+  border: 1px solid var(--text-color);
+  border-radius: 5px;
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* --- Responsive --- */

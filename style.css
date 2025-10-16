@@ -46,6 +46,7 @@ h1 {
   color: var(--accent);
 }
 
+/* --- Chat Box --- */
 #chatBox {
   width: 90%;
   max-width: 600px;
@@ -81,7 +82,9 @@ h1 {
   transition: all 0.3s ease;
 }
 
-#sendBtn, #toggleThemeBtn {
+#attachImageBtn,
+#sendBtn,
+#toggleThemeBtn {
   padding: 10px 15px;
   border: none;
   border-radius: 5px;
@@ -92,7 +95,13 @@ h1 {
   transition: all 0.3s ease;
 }
 
-#sendBtn:hover, #toggleThemeBtn:hover {
+#attachImageBtn {
+  margin-right: 10px;
+}
+
+#attachImageBtn:hover,
+#sendBtn:hover,
+#toggleThemeBtn:hover {
   background-color: #0d7f48;
 }
 
@@ -117,6 +126,13 @@ h1 {
 
 .text {
   font-size: 15px;
+}
+
+/* --- Image message styling --- */
+.msg img {
+  max-width: 100%;
+  border-radius: 6px;
+  margin-top: 5px;
 }
 
 /* --- Typing Indicator --- */
@@ -147,7 +163,7 @@ h1 {
   justify-content: center;
 }
 
-#usernameModal .modal-content {
+#usernameModal .modal-inner {
   background: var(--bg-color);
   color: var(--text-color);
   padding: 20px;
@@ -192,7 +208,9 @@ h1 {
     font-size: 14px;
   }
 
-  #sendBtn, #toggleThemeBtn {
+  #sendBtn,
+  #attachImageBtn,
+  #toggleThemeBtn {
     font-size: 14px;
     padding: 8px 12px;
   }

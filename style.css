@@ -130,9 +130,17 @@ h1 {
 
 /* --- Image message styling --- */
 .msg img {
-  max-width: 100%;
-  border-radius: 6px;
+  max-width: 250px;       /* Limit image width */
+  max-height: 250px;      /* Limit image height */
+  border-radius: 8px;
   margin-top: 5px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.msg img:hover {
+  transform: scale(1.05); /* Slight zoom on hover */
 }
 
 /* --- Typing Indicator --- */
@@ -213,5 +221,10 @@ h1 {
   #toggleThemeBtn {
     font-size: 14px;
     padding: 8px 12px;
+  }
+
+  .msg img {
+    max-width: 180px;
+    max-height: 180px;
   }
 }

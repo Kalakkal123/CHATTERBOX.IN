@@ -64,7 +64,7 @@ const onlineCount = document.getElementById("onlineCount");
 
 // Image upload elements
 const imageInput = document.getElementById("imageInput");
-const imageBtn = document.getElementById("imageBtn");
+const imageBtn = document.getElementById("attachImageBtn");
 
 let username = null;
 

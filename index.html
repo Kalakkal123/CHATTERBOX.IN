@@ -1,21 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>KK Chat</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body data-theme="dark">
-  <h1>KK Chat</h1>
-  <button id="toggleThemeBtn">Toggle Dark/Light Mode</button>
-  <div id="chatBox"></div>
-  <div id="inputArea">
-    <input type="text" id="messageInput" placeholder="Type your message...">
-    <button id="sendBtn">Send</button>
+  <header class="topbar">
+    <h1>KK Chat</h1>
+    <div class="top-controls">
+      <span id="onlineCount">Online: [0 Users]</span>
+      <button id="toggleThemeBtn" aria-label="Toggle theme">Toggle Dark/Light Mode</button>
+    </div>
+  </header>
+
+  <!-- Username modal (shown until user enters a name) -->
+  <div id="usernameModal" class="modal">
+    <div class="modal-inner">
+      <h2>Choose a display name</h2>
+      <input id="usernameInput" type="text" placeholder="Enter your name (e.g. John)" maxlength="24" />
+      <div class="modal-actions">
+        <button id="setNameBtn">Start Chatting</button>
+      </div>
+    </div>
   </div>
 
-  <!-- Link to JS -->
+  <!-- Chat area -->
+  <main class="chat-wrapper">
+    <div id="chatBox" role="log" aria-live="polite"></div>
+
+    <!-- Typing indicator -->
+    <div id="typingIndicator" aria-hidden="true" class="typing-indicator">
+      <em id="typingText"></em>
+    </div>
+
+    <!-- Input area -->
+    <div id="inputArea" class="input-area">
+      <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off" />
+      <input type="file" id="imageInput" accept="image/*" style="display: none;" />
+      <button id="attachImageBtn" title="Attach image">📷</button>
+      <button id="recordBtn" title="Record voice message">🎤</button>
+      <button id="sendBtn">Send</button>
+    </div>
+  </main>
+
+  <!-- Link to JS (module) -->
   <script type="module" src="script.js"></script>
 </body>
 </html>

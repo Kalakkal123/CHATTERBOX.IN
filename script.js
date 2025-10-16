@@ -1,6 +1,5 @@
 // ----------------- Dark Mode Toggle -----------------
 const toggleBtn = document.getElementById("toggleThemeBtn");
-
 toggleBtn.addEventListener("click", () => {
   const currentTheme = document.body.getAttribute("data-theme");
   document.body.setAttribute("data-theme", currentTheme === "dark" ? "light" : "dark");
@@ -64,14 +63,14 @@ const onlineCount = document.getElementById("onlineCount");
 
 // Image upload elements
 const imageInput = document.getElementById("imageInput");
-const imageBtn = document.getElementById("attachImageBtn");
+const imageBtn = document.getElementById("attachImageBtn"); // Corrected ID
 
 let username = null;
 
 // ----------------- Username Setup -----------------
 setNameBtn.addEventListener("click", () => {
   const name = usernameInput.value.trim();
-  if (name === "") return alert("Please enter a valid name");
+  if (!name) return alert("Please enter a valid name");
   username = name;
 
   usernameModal.style.display = "none";
@@ -147,23 +146,22 @@ imageInput.addEventListener("change", async (e) => {
     await uploadBytes(imgRef, file);
     const url = await getDownloadURL(imgRef);
 
-    // push image message to DB
     const msgRef = push(messagesRef, {
       type: "image",
-      url: url,
+      url,
       path: filePath,
       sender: username,
       timestamp: Date.now(),
     });
 
-    // schedule auto-delete after 10 minutes
+    // Auto-delete after 10 minutes
     setTimeout(async () => {
       try {
         await deleteObject(imgRef);
         await remove(msgRef);
         console.log("🗑️ Image deleted after 10 mins");
       } catch (err) {
-        console.error("Error auto deleting image:", err);
+        console.error("Error deleting image:", err);
       }
     }, 10 * 60 * 1000);
   } catch (err) {
@@ -182,7 +180,6 @@ onChildAdded(messagesRef, (snapshot) => {
   const nameSpan = document.createElement("span");
   nameSpan.className = "sender";
   nameSpan.textContent = `${data.sender || "Unknown"}: `;
-
   div.appendChild(nameSpan);
 
   if (data.type === "text") {

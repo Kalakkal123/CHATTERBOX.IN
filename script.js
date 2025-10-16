@@ -15,24 +15,32 @@ import {
   onChildAdded,
   onDisconnect,
   set,
-  serverTimestamp,
   onValue,
+  remove,
 } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBCJI2YgCLUyI0U9ufRfCujRjDDTeP-lNY",
   authDomain: "kalakkal1-d6e19.firebaseapp.com",
   databaseURL: "https://kalakkal1-d6e19-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "kalakkal1-d6e19",
-  storageBucket: "kalakkal1-d6e19.firebasestorage.app",
+  storageBucket: "kalakkal1-d6e19.appspot.com",
   messagingSenderId: "979373423767",
   appId: "1:979373423767:web:52485a1a022670f2b6fdd2",
 };
 
-let app, database;
+let app, database, storage;
 try {
   app = initializeApp(firebaseConfig);
   database = getDatabase(app);
+  storage = getStorage(app);
   console.log("Firebase initialized successfully ✅");
 } catch (err) {
   console.error("Firebase initialization error:", err);
@@ -54,6 +62,10 @@ const typingIndicator = document.getElementById("typingIndicator");
 const typingText = document.getElementById("typingText");
 const onlineCount = document.getElementById("onlineCount");
 
+// Image upload elements
+const imageInput = document.getElementById("imageInput");
+const imageBtn = document.getElementById("imageBtn");
+
 let username = null;
 
 // ----------------- Username Setup -----------------
@@ -62,10 +74,8 @@ setNameBtn.addEventListener("click", () => {
   if (name === "") return alert("Please enter a valid name");
   username = name;
 
-  // Hide modal
   usernameModal.style.display = "none";
 
-  // Add user to presence list
   const userStatusRef = ref(database, `presence/${username}`);
   set(userStatusRef, true);
   onDisconnect(userStatusRef).remove();
@@ -83,7 +93,6 @@ input.addEventListener("input", () => {
   }, 1500);
 });
 
-// Display typing status from other users
 onValue(typingRef, (snapshot) => {
   const typingUsers = snapshot.val() || {};
   const others = Object.keys(typingUsers).filter((u) => typingUsers[u] && u !== username);
@@ -103,22 +112,20 @@ onValue(presenceRef, (snapshot) => {
   onlineCount.textContent = `Online: [${count} Users]`;
 });
 
-// ----------------- Send Message -----------------
+// ----------------- Send Text Message -----------------
 function sendMessage() {
   const msg = input.value.trim();
   if (msg === "" || !username) return;
 
-  try {
-    push(messagesRef, {
-      text: msg,
-      sender: username,
-      timestamp: Date.now(),
-    });
-    input.value = "";
-    set(ref(database, `typing/${username}`), false);
-  } catch (err) {
-    console.error("Error sending message:", err);
-  }
+  push(messagesRef, {
+    type: "text",
+    text: msg,
+    sender: username,
+    timestamp: Date.now(),
+  });
+
+  input.value = "";
+  set(ref(database, `typing/${username}`), false);
 }
 
 sendBtn.addEventListener("click", sendMessage);
@@ -126,10 +133,48 @@ input.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
 });
 
+// ----------------- Send Image Message -----------------
+imageBtn.addEventListener("click", () => imageInput.click());
+
+imageInput.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file || !username) return;
+
+  const filePath = `images/${Date.now()}_${file.name}`;
+  const imgRef = storageRef(storage, filePath);
+
+  try {
+    await uploadBytes(imgRef, file);
+    const url = await getDownloadURL(imgRef);
+
+    // push image message to DB
+    const msgRef = push(messagesRef, {
+      type: "image",
+      url: url,
+      path: filePath,
+      sender: username,
+      timestamp: Date.now(),
+    });
+
+    // schedule auto-delete after 10 minutes
+    setTimeout(async () => {
+      try {
+        await deleteObject(imgRef);
+        await remove(msgRef);
+        console.log("🗑️ Image deleted after 10 mins");
+      } catch (err) {
+        console.error("Error auto deleting image:", err);
+      }
+    }, 10 * 60 * 1000);
+  } catch (err) {
+    console.error("Image upload failed:", err);
+  }
+});
+
 // ----------------- Listen for Messages -----------------
 onChildAdded(messagesRef, (snapshot) => {
   const data = snapshot.val();
-  if (!data || !data.text) return;
+  if (!data) return;
 
   const div = document.createElement("div");
   div.className = "msg";
@@ -138,14 +183,21 @@ onChildAdded(messagesRef, (snapshot) => {
   nameSpan.className = "sender";
   nameSpan.textContent = `${data.sender || "Unknown"}: `;
 
-  const textSpan = document.createElement("span");
-  textSpan.className = "text";
-  textSpan.textContent = data.text;
-
   div.appendChild(nameSpan);
-  div.appendChild(textSpan);
-  chatBox.appendChild(div);
 
-  // Auto scroll to bottom
+  if (data.type === "text") {
+    const textSpan = document.createElement("span");
+    textSpan.className = "text";
+    textSpan.textContent = data.text;
+    div.appendChild(textSpan);
+  } else if (data.type === "image") {
+    const img = document.createElement("img");
+    img.src = data.url;
+    img.alt = "image";
+    img.className = "chat-image";
+    div.appendChild(img);
+  }
+
+  chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 });

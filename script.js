@@ -58,6 +58,7 @@ const onlineCount = document.getElementById("onlineCount");
 
 // ----------------- Sound -----------------
 const joinSound = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+const adminDing = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
 
 // ----------------- Username Setup + Admin Mode -----------------
 let username = null;
@@ -70,7 +71,7 @@ setNameBtn.addEventListener("click", () => {
 
   if (name === "MASTER") {
     isAdmin = true;
-    username = "Admin 🛡️";
+    username = "MASTER";
   } else {
     username = name;
   }
@@ -144,6 +145,9 @@ function sendMessage() {
   input.value = "";
   set(ref(database, `typing/${username}`), false);
 
+  // Admin ding
+  if (isAdmin) adminDing.play().catch(() => {});
+
   // Auto-delete after 1 hour
   setTimeout(() => {
     remove(messageRef);
@@ -175,16 +179,28 @@ onChildAdded(messagesRef, (snapshot) => {
     nameSpan.textContent = `${data.sender}: `;
     if (data.admin) {
       nameSpan.style.color = "#FFD700"; // gold color for admin
+      nameSpan.style.fontWeight = "bold";
     }
     div.appendChild(nameSpan);
 
     const textSpan = document.createElement("span");
     textSpan.className = "text";
+    textSpan.style.fontWeight = data.admin ? "bold" : "normal";
 
     // Tagging styling
     let finalText = data.text.replace(/@(\w+)/g, '<span class="tagged">@$1</span>');
     textSpan.innerHTML = finalText;
     div.appendChild(textSpan);
+
+    // Admin can delete any message by clicking
+    if (isAdmin) {
+      div.addEventListener("click", () => {
+        if (confirm("Delete this message?")) {
+          remove(ref(database, `messages/${key}`));
+          div.remove();
+        }
+      });
+    }
   }
 
   chatBox.appendChild(div);
@@ -198,4 +214,23 @@ onChildAdded(messagesRef, (snapshot) => {
       div.remove();
     }, timeLeft);
   }
+});
+
+// ----------------- Clear All Messages (Admin Only) -----------------
+if (isAdmin) {
+  const clearBtn = document.createElement("button");
+  clearBtn.textContent = "Clear All Messages";
+  clearBtn.style.background = "#FFD700";
+  clearBtn.style.color = "#000";
+  clearBtn.style.border = "none";
+  clearBtn.style.padding = "5px 10px";
+  clearBtn.style.margin = "5px";
+  clearBtn.style.cursor = "pointer";
+  clearBtn.addEventListener("click", () => {
+    if (confirm("Are you sure you want to delete all messages?")) {
+      remove(messagesRef);
+      chatBox.innerHTML = "";
+    }
+  });
+  document.body.prepend(clearBtn);
 });

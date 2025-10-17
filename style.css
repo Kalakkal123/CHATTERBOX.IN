@@ -1,338 +1,254 @@
-/* --- Root variables for light/dark mode --- */
-:root {
-  --bg-color: #ffffff;
-  --text-color: #000000;
-  --input-bg: #f0f0f0;
-  --input-text: #000000;
-  --btn-bg: #0f9d58;
-  --btn-text: #ffffff;
-  --chat-bg: #e0e0e0;
-  --msg-bg: #d0d0d0;
-  --accent: #0f9d58;
-  --admin-color: #FFD700;
+// ----------------- Dark Mode Toggle -----------------
+const toggleBtn = document.getElementById("toggleThemeBtn");
+if (toggleBtn) {
+  toggleBtn.addEventListener("click", () => {
+    const currentTheme = document.body.getAttribute("data-theme");
+    document.body.setAttribute(
+      "data-theme",
+      currentTheme === "dark" ? "light" : "dark"
+    );
+  });
 }
 
-[data-theme="dark"] {
-  --bg-color: #121212;
-  --text-color: #ffffff;
-  --input-bg: #1e1e1e;
-  --input-text: #ffffff;
-  --btn-bg: #0f9d58;
-  --btn-text: #ffffff;
-  --chat-bg: #1e1e1e;
-  --msg-bg: #333333;
-  --accent: #0f9d58;
-  --admin-color: #FFD700;
+// ----------------- Firebase Setup -----------------
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  push,
+  onChildAdded,
+  onDisconnect,
+  set,
+  onValue,
+  remove
+} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBCJI2YgCLUyI0U9ufRfCujRjDDTeP-lNY",
+  authDomain: "kalakkal1-d6e19.firebaseapp.com",
+  databaseURL: "https://kalakkal1-d6e19-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "kalakkal1-d6e19",
+  storageBucket: "kalakkal1-d6e19.appspot.com",
+  messagingSenderId: "979373423767",
+  appId: "1:979373423767:web:52485a1a022670f2b6fdd2",
+};
+
+let app, database;
+try {
+  app = initializeApp(firebaseConfig);
+  database = getDatabase(app);
+  console.log("✅ Firebase initialized");
+} catch (err) {
+  console.error("❌ Firebase init error:", err);
 }
 
-/* --- General Styles --- */
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 0;
-  padding: 20px;
-  transition: all 0.3s ease;
-}
+// ----------------- References -----------------
+const messagesRef = ref(database, "messages");
+const presenceRef = ref(database, "presence");
+const typingRef = ref(database, "typing");
 
-h1 {
-  margin-bottom: 10px;
-}
+// ----------------- DOM Elements -----------------
+const chatBox = document.getElementById("chatBox");
+const input = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const usernameModal = document.getElementById("usernameModal");
+const usernameInput = document.getElementById("usernameInput");
+const setNameBtn = document.getElementById("setNameBtn");
+const typingIndicator = document.getElementById("typingIndicator");
+const typingText = document.getElementById("typingText");
+const onlineCount = document.getElementById("onlineCount");
 
-#onlineCount {
-  font-size: 14px;
-  margin-bottom: 15px;
-  color: var(--accent);
-}
+// ----------------- Sound -----------------
+const joinSound = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+const adminDing = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
 
-/* --- Chat Box --- */
-#chatBox {
-  width: 90%;
-  max-width: 600px;
-  height: 400px;
-  border-radius: 10px;
-  border: 2px solid var(--text-color);
-  padding: 10px;
-  overflow-y: auto;
-  margin-bottom: 10px;
-  background-color: var(--chat-bg);
-  transition: all 0.3s ease;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent) transparent;
-}
+// ----------------- Username Setup + Admin Mode -----------------
+let username = null;
+let isAdmin = false;
+let onlineUsersBefore = 0;
 
-/* --- Custom Scrollbar --- */
-#chatBox::-webkit-scrollbar {
-  width: 8px;
-}
+setNameBtn.addEventListener("click", () => {
+  const name = usernameInput.value.trim();
+  if (!name) return alert("Please enter a valid name");
 
-#chatBox::-webkit-scrollbar-thumb {
-  background: var(--accent);
-  border-radius: 10px;
-}
-
-#chatBox::-webkit-scrollbar-thumb:hover {
-  background: #0d7f48;
-}
-
-#chatBox::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* --- Input Area --- */
-#inputArea {
-  display: flex;
-  width: 90%;
-  max-width: 600px;
-  margin-bottom: 20px;
-}
-
-#messageInput {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  background-color: var(--input-bg);
-  color: var(--input-text);
-  margin-right: 10px;
-  font-size: 15px;
-  transition: all 0.3s ease;
-}
-
-#sendBtn,
-#toggleThemeBtn {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
-  background-color: var(--btn-bg);
-  color: var(--btn-text);
-  cursor: pointer;
-  font-size: 15px;
-  transition: all 0.3s ease;
-}
-
-#sendBtn:hover,
-#toggleThemeBtn:hover {
-  background-color: #0d7f48;
-}
-
-/* --- Floating Theme Toggle Button --- */
-#toggleThemeBtn {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* --- Message Styling --- */
-.msg {
-  margin: 5px 0;
-  padding: 8px 12px;
-  background-color: var(--msg-bg);
-  border-radius: 8px;
-  max-width: 80%;
-  word-wrap: break-word;
-  display: flex;
-  flex-direction: column;
-  cursor: default;
-  animation: slideIn 0.25s ease;
-  transition: opacity 0.5s ease, transform 0.3s ease;
-}
-
-/* Slide-in animation for messages */
-@keyframes slideIn {
-  from {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.msg.admin-msg {
-  font-weight: bold;
-}
-
-.msg.fade-out {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.msg.self {
-  background-color: var(--accent);
-  color: #fff;
-  align-self: flex-end;
-  text-align: right;
-}
-
-.msg.self .sender {
-  color: #fff;
-}
-
-.sender {
-  font-weight: bold;
-  color: var(--accent);
-  margin-bottom: 2px;
-}
-
-.sender.admin {
-  color: var(--admin-color);
-}
-
-.text {
-  font-size: 15px;
-}
-
-.tagged {
-  color: var(--btn-bg);
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* --- Typing Indicator --- */
-#typingIndicator {
-  font-style: italic;
-  color: var(--accent);
-  margin-bottom: 10px;
-  display: none;
-  animation: fadeInOut 1.2s infinite;
-}
-
-@keyframes fadeInOut {
-  0% { opacity: 0.3; }
-  50% { opacity: 1; }
-  100% { opacity: 0.3; }
-}
-
-/* --- Username Modal --- */
-#usernameModal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-#usernameModal .modal-inner {
-  background: var(--bg-color);
-  color: var(--text-color);
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-  width: 90%;
-  max-width: 350px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.4);
-}
-
-#usernameInput {
-  width: 80%;
-  padding: 10px;
-  margin-top: 10px;
-  border: 1px solid var(--text-color);
-  border-radius: 5px;
-  background-color: var(--input-bg);
-  color: var(--input-text);
-}
-
-#setNameBtn {
-  margin-top: 15px;
-  padding: 10px 15px;
-  background: var(--btn-bg);
-  color: var(--btn-text);
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-#setNameBtn:hover {
-  background: #0d7f48;
-}
-
-/* --- Admin Panel Modal --- */
-#adminPanel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-#adminPanel .modal-inner {
-  background: var(--bg-color);
-  color: var(--text-color);
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-  width: 90%;
-  max-width: 350px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.4);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-#adminPanel button {
-  padding: 10px 15px;
-  background: var(--btn-bg);
-  color: var(--btn-text);
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-#adminPanel button:hover {
-  background-color: #0d7f48;
-}
-
-#announcementInput {
-  padding: 8px;
-  border: 1px solid var(--text-color);
-  border-radius: 5px;
-  background-color: var(--input-bg);
-  color: var(--input-text);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* --- Responsive --- */
-@media (max-width: 600px) {
-  #chatBox {
-    height: 300px;
+  if (name === "MASTER") {
+    isAdmin = true;
+    username = "ADMIN"; // show as ADMIN to everyone
+    document.getElementById("adminPanel").style.display = "flex";
+  } else {
+    username = name;
   }
 
-  #messageInput {
-    font-size: 14px;
+  usernameModal.style.display = "none";
+
+  const userStatusRef = ref(database, `presence/${username}`);
+  set(userStatusRef, true);
+  onDisconnect(userStatusRef).remove();
+
+  // Send system message
+  push(messagesRef, {
+    type: "system",
+    text: `${username} joined the chat 🚀`,
+    timestamp: Date.now()
+  });
+});
+
+// ----------------- Typing Indicator -----------------
+let typingTimeout;
+if (input) {
+  input.addEventListener("input", () => {
+    if (!username) return;
+    set(ref(database, `typing/${username}`), true);
+
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      set(ref(database, `typing/${username}`), false);
+    }, 1500);
+  });
+}
+
+onValue(typingRef, (snapshot) => {
+  const typingUsers = snapshot.val() || {};
+  const others = Object.keys(typingUsers).filter((u) => typingUsers[u] && u !== username);
+
+  if (others.length > 0) {
+    typingText.textContent = `${others.join(", ")}: typing...`;
+    typingIndicator.style.display = "block";
+  } else {
+    typingIndicator.style.display = "none";
+  }
+});
+
+// ----------------- Online User Counter + Sound -----------------
+onValue(presenceRef, (snapshot) => {
+  const users = snapshot.val() || {};
+  const count = Object.keys(users).length;
+  onlineCount.textContent = `Online: [${count} Users]`;
+
+  if (count > onlineUsersBefore && onlineUsersBefore !== 0) {
+    joinSound.play().catch(() => {});
+  }
+  onlineUsersBefore = count;
+});
+
+// ----------------- Send Text Message -----------------
+function sendMessage() {
+  let msg = input.value.trim();
+  if (msg === "" || !username) return;
+
+  // Admin command: /clear
+  if (isAdmin && msg.toLowerCase() === "/clear") {
+    remove(messagesRef);
+    if (chatBox) chatBox.innerHTML = "";
+    input.value = "";
+    return;
   }
 
-  #sendBtn,
-  #toggleThemeBtn {
-    font-size: 14px;
-    padding: 8px 12px;
+  const messageRef = push(messagesRef, {
+    type: "text",
+    text: msg.replace(/@(\w+)/g, "@$1"),
+    sender: username,
+    admin: isAdmin,
+    timestamp: Date.now(),
+  });
+
+  input.value = "";
+  set(ref(database, `typing/${username}`), false);
+
+  if (isAdmin) adminDing.play().catch(() => {});
+
+  // Auto-delete after 1 hour
+  setTimeout(() => remove(messageRef), 60 * 60 * 1000);
+}
+
+if (sendBtn) sendBtn.addEventListener("click", sendMessage);
+if (input) {
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendMessage();
+  });
+}
+
+// ----------------- Listen for Messages -----------------
+onChildAdded(messagesRef, (snapshot) => {
+  const data = snapshot.val();
+  const key = snapshot.key;
+  if (!data || !chatBox) return;
+
+  const div = document.createElement("div");
+  div.className = "msg";
+  div.id = `msg-${key}`;
+  if (data.admin) div.classList.add("admin-msg");
+  if (data.sender === username) div.classList.add("self");
+
+  if (data.type === "system") {
+    div.style.textAlign = "center";
+    div.style.opacity = "0.8";
+    div.textContent = data.text;
+  } else {
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "sender";
+    if (data.admin) nameSpan.classList.add("admin");
+    nameSpan.textContent = `${data.sender}: `;
+
+    const textSpan = document.createElement("span");
+    textSpan.className = "text";
+    textSpan.style.fontWeight = data.admin ? "bold" : "normal";
+    textSpan.innerHTML = data.text.replace(/@(\w+)/g, '<span class="tagged">@$1</span>');
+
+    div.appendChild(nameSpan);
+    div.appendChild(textSpan);
+
+    // Admin can delete messages
+    if (isAdmin) {
+      div.addEventListener("click", () => {
+        if (confirm("Delete this message?")) {
+          remove(ref(database, `messages/${key}`));
+          div.remove();
+        }
+      });
+    }
   }
 
-  #toggleThemeBtn {
-    width: 45px;
-    height: 45px;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  // Auto remove message after 1 hour
+  const timeLeft = 60 * 60 * 1000 - (Date.now() - data.timestamp);
+  if (timeLeft > 0) {
+    setTimeout(() => {
+      remove(ref(database, `messages/${key}`));
+      div.remove();
+    }, timeLeft);
+  }
+});
+
+// ----------------- Admin Panel Buttons -----------------
+if (isAdmin) {
+  const clearBtn = document.getElementById("clearChatBtn");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      if (confirm("Are you sure you want to delete all messages?")) {
+        remove(messagesRef);
+        if (chatBox) chatBox.innerHTML = "";
+      }
+    });
+  }
+
+  const announceBtn = document.getElementById("announceBtn");
+  const announcementInput = document.getElementById("announcementInput");
+
+  if (announceBtn && announcementInput) {
+    announceBtn.addEventListener("click", () => {
+      const text = announcementInput.value.trim();
+      if (!text) return;
+      push(messagesRef, {
+        type: "announcement",
+        text,
+        sender: "ADMIN",
+        admin: true,
+        timestamp: Date.now()
+      });
+      announcementInput.value = "";
+    });
   }
 }

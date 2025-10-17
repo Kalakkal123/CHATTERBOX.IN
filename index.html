@@ -7,48 +7,64 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body data-theme="dark">
+  <!-- Topbar -->
   <header class="topbar">
     <h1>KK Chat</h1>
     <div class="top-controls">
       <span id="onlineCount">Online: [0 Users]</span>
-      <button id="toggleThemeBtn" aria-label="Toggle theme">Toggle Dark/Light Mode</button>
+      <button id="toggleThemeBtn" aria-label="Toggle theme">🌓</button>
     </div>
   </header>
 
-  <!-- Username modal -->
+  <!-- Username Modal -->
   <div id="usernameModal" class="modal">
     <div class="modal-inner">
       <h2>Choose a display name</h2>
-      <input id="usernameInput" type="text" placeholder="Enter your name (e.g. John)" maxlength="24" />
+      <input
+        id="usernameInput"
+        type="text"
+        placeholder="Enter your name (e.g. John)"
+        maxlength="24"
+      />
       <div class="modal-actions">
-        <button id="setNameBtn">Start Chatting</button>
+        <button id="setNameBtn">Start Chatting 🚀</button>
       </div>
     </div>
   </div>
 
-  <!-- Chat area -->
+  <!-- Chat Area -->
   <main class="chat-wrapper">
     <div id="chatBox" role="log" aria-live="polite"></div>
 
-    <!-- Typing indicator -->
+    <!-- Typing Indicator -->
     <div id="typingIndicator" aria-hidden="true" class="typing-indicator">
       <em id="typingText"></em>
     </div>
 
-    <!-- Input area -->
+    <!-- Input Area -->
     <div id="inputArea" class="input-area">
-      <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off" />
+      <input
+        type="text"
+        id="messageInput"
+        placeholder="Type your message..."
+        autocomplete="off"
+      />
       <button id="sendBtn">Send</button>
     </div>
   </main>
 
-  <!-- Admin Panel (hidden until MASTER logs in) -->
-  <div id="adminPanel" class="modal" style="display:none;">
+  <!-- Admin Panel (Only MASTER can see) -->
+  <div id="adminPanel" class="modal" style="display: none;">
     <div class="modal-inner">
-      <h2>Admin Panel</h2>
-      <button id="clearChatBtn">Clear All Messages</button>
-      <input id="announcementInput" type="text" placeholder="Type announcement..." maxlength="100" />
-      <button id="announceBtn">Send Announcement</button>
+      <h2>Admin Panel 👑</h2>
+      <button id="clearChatBtn" class="admin-btn danger">🧼 Clear All Messages</button>
+      <input
+        id="announcementInput"
+        type="text"
+        placeholder="Type announcement..."
+        maxlength="100"
+      />
+      <button id="announceBtn" class="admin-btn announce">📢 Send Announcement</button>
     </div>
   </div>
 

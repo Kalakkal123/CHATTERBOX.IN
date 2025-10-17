@@ -57,6 +57,10 @@ const setNameBtn = document.getElementById("setNameBtn");
 const typingIndicator = document.getElementById("typingIndicator");
 const typingText = document.getElementById("typingText");
 const onlineCount = document.getElementById("onlineCount");
+const adminPanel = document.getElementById("adminPanel");
+const clearChatBtn = document.getElementById("clearChatBtn");
+const announcementInput = document.getElementById("announcementInput");
+const announceBtn = document.getElementById("announceBtn");
 
 // ----------------- Sound -----------------
 const joinSound = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
@@ -73,7 +77,8 @@ setNameBtn.addEventListener("click", () => {
 
   if (name === "MASTER") {
     isAdmin = true;
-    username = "MASTER";
+    username = "ADMIN"; // Display to others as ADMIN
+    if (adminPanel) adminPanel.style.display = "flex";
   } else {
     username = name;
   }
@@ -84,7 +89,7 @@ setNameBtn.addEventListener("click", () => {
   set(userStatusRef, true);
   onDisconnect(userStatusRef).remove();
 
-  // Send system message
+  // System message
   push(messagesRef, {
     type: "system",
     text: `${username} joined the chat 🚀`,
@@ -98,7 +103,6 @@ if (input) {
   input.addEventListener("input", () => {
     if (!username) return;
     set(ref(database, `typing/${username}`), true);
-
     clearTimeout(typingTimeout);
     typingTimeout = setTimeout(() => {
       set(ref(database, `typing/${username}`), false);
@@ -124,16 +128,22 @@ onValue(presenceRef, (snapshot) => {
   const count = Object.keys(users).length;
   onlineCount.textContent = `Online: [${count} Users]`;
 
-  if (count > onlineUsersBefore && onlineUsersBefore !== 0) {
-    joinSound.play().catch(() => {});
-  }
+  if (count > onlineUsersBefore && onlineUsersBefore !== 0) joinSound.play().catch(() => {});
   onlineUsersBefore = count;
 });
 
 // ----------------- Send Text Message -----------------
 function sendMessage() {
-  const msg = input.value.trim();
-  if (msg === "" || !username) return;
+  let msg = input.value.trim();
+  if (!msg || !username) return;
+
+  // Admin clear command
+  if (isAdmin && msg === "/clear") {
+    remove(messagesRef);
+    if (chatBox) chatBox.innerHTML = "";
+    input.value = "";
+    return;
+  }
 
   const messageRef = push(messagesRef, {
     type: "text",
@@ -147,9 +157,6 @@ function sendMessage() {
   set(ref(database, `typing/${username}`), false);
 
   if (isAdmin) adminDing.play().catch(() => {});
-
-  // Auto-delete after 1 hour
-  setTimeout(() => remove(messageRef), 60 * 60 * 1000);
 }
 
 if (sendBtn) sendBtn.addEventListener("click", sendMessage);
@@ -178,18 +185,32 @@ onChildAdded(messagesRef, (snapshot) => {
     nameSpan.className = "sender";
     nameSpan.textContent = `${data.sender}: `;
     if (data.admin) {
-      nameSpan.style.color = "#FFD700"; // Gold color
+      nameSpan.style.color = "#FFD700";
       nameSpan.style.fontWeight = "bold";
     }
 
+    // Click name to open DM
+    nameSpan.style.cursor = "pointer";
+    nameSpan.addEventListener("click", () => {
+      const dm = prompt(`Send private message to ${data.sender}:`);
+      if (dm) {
+        push(messagesRef, {
+          type: "dm",
+          text: dm,
+          sender: username,
+          receiver: data.sender,
+          timestamp: Date.now()
+        });
+      }
+    });
+
     const textSpan = document.createElement("span");
     textSpan.className = "text";
-    textSpan.style.fontWeight = data.admin ? "bold" : "normal";
     textSpan.innerHTML = data.text.replace(/@(\w+)/g, '<span class="tagged">@$1</span>');
-
     div.appendChild(nameSpan);
     div.appendChild(textSpan);
 
+    // Admin click to delete
     if (isAdmin) {
       div.addEventListener("click", () => {
         if (confirm("Delete this message?")) {
@@ -203,7 +224,7 @@ onChildAdded(messagesRef, (snapshot) => {
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 
-  // Auto remove message after 1 hour
+  // Auto remove after 1 hour
   const timeLeft = 60 * 60 * 1000 - (Date.now() - data.timestamp);
   if (timeLeft > 0) {
     setTimeout(() => {
@@ -213,23 +234,26 @@ onChildAdded(messagesRef, (snapshot) => {
   }
 });
 
-// ----------------- Clear All Messages (Admin Only) -----------------
-window.addEventListener("load", () => {
-  if (isAdmin) {
-    const clearBtn = document.createElement("button");
-    clearBtn.textContent = "Clear All Messages";
-    clearBtn.style.background = "#FFD700";
-    clearBtn.style.color = "#000";
-    clearBtn.style.border = "none";
-    clearBtn.style.padding = "5px 10px";
-    clearBtn.style.margin = "5px";
-    clearBtn.style.cursor = "pointer";
-    clearBtn.addEventListener("click", () => {
-      if (confirm("Are you sure you want to delete all messages?")) {
-        remove(messagesRef);
-        if (chatBox) chatBox.innerHTML = "";
-      }
+// ----------------- Admin Panel Buttons -----------------
+if (clearChatBtn) {
+  clearChatBtn.addEventListener("click", () => {
+    if (confirm("Are you sure you want to delete all messages?")) {
+      remove(messagesRef);
+      if (chatBox) chatBox.innerHTML = "";
+    }
+  });
+}
+
+if (announceBtn) {
+  announceBtn.addEventListener("click", () => {
+    const msg = announcementInput.value.trim();
+    if (!msg) return;
+    push(messagesRef, {
+      type: "announcement",
+      text: msg,
+      sender: "ADMIN",
+      timestamp: Date.now()
     });
-    document.body.prepend(clearBtn);
-  }
-});
+    announcementInput.value = "";
+  });
+}

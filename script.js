@@ -1,12 +1,14 @@
 // ----------------- Dark Mode Toggle -----------------
 const toggleBtn = document.getElementById("toggleThemeBtn");
-toggleBtn.addEventListener("click", () => {
-  const currentTheme = document.body.getAttribute("data-theme");
-  document.body.setAttribute(
-    "data-theme",
-    currentTheme === "dark" ? "light" : "dark"
-  );
-});
+if (toggleBtn) {
+  toggleBtn.addEventListener("click", () => {
+    const currentTheme = document.body.getAttribute("data-theme");
+    document.body.setAttribute(
+      "data-theme",
+      currentTheme === "dark" ? "light" : "dark"
+    );
+  });
+}
 
 // ----------------- Firebase Setup -----------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
@@ -35,9 +37,9 @@ let app, database;
 try {
   app = initializeApp(firebaseConfig);
   database = getDatabase(app);
-  console.log("Firebase initialized successfully ✅");
+  console.log("✅ Firebase initialized");
 } catch (err) {
-  console.error("Firebase initialization error:", err);
+  console.error("❌ Firebase init error:", err);
 }
 
 // ----------------- References -----------------
@@ -82,7 +84,7 @@ setNameBtn.addEventListener("click", () => {
   set(userStatusRef, true);
   onDisconnect(userStatusRef).remove();
 
-  // Send welcome message
+  // Send system message
   push(messagesRef, {
     type: "system",
     text: `${username} joined the chat 🚀`,
@@ -92,15 +94,17 @@ setNameBtn.addEventListener("click", () => {
 
 // ----------------- Typing Indicator -----------------
 let typingTimeout;
-input.addEventListener("input", () => {
-  if (!username) return;
-  set(ref(database, `typing/${username}`), true);
+if (input) {
+  input.addEventListener("input", () => {
+    if (!username) return;
+    set(ref(database, `typing/${username}`), true);
 
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    set(ref(database, `typing/${username}`), false);
-  }, 1500);
-});
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      set(ref(database, `typing/${username}`), false);
+    }, 1500);
+  });
+}
 
 onValue(typingRef, (snapshot) => {
   const typingUsers = snapshot.val() || {};
@@ -128,15 +132,12 @@ onValue(presenceRef, (snapshot) => {
 
 // ----------------- Send Text Message -----------------
 function sendMessage() {
-  let msg = input.value.trim();
+  const msg = input.value.trim();
   if (msg === "" || !username) return;
-
-  // Tagging highlight
-  msg = msg.replace(/@(\w+)/g, "@$1");
 
   const messageRef = push(messagesRef, {
     type: "text",
-    text: msg,
+    text: msg.replace(/@(\w+)/g, "@$1"),
     sender: username,
     admin: isAdmin,
     timestamp: Date.now(),
@@ -145,25 +146,24 @@ function sendMessage() {
   input.value = "";
   set(ref(database, `typing/${username}`), false);
 
-  // Admin ding
   if (isAdmin) adminDing.play().catch(() => {});
 
   // Auto-delete after 1 hour
-  setTimeout(() => {
-    remove(messageRef);
-  }, 60 * 60 * 1000);
+  setTimeout(() => remove(messageRef), 60 * 60 * 1000);
 }
 
-sendBtn.addEventListener("click", sendMessage);
-input.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") sendMessage();
-});
+if (sendBtn) sendBtn.addEventListener("click", sendMessage);
+if (input) {
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendMessage();
+  });
+}
 
 // ----------------- Listen for Messages -----------------
 onChildAdded(messagesRef, (snapshot) => {
   const data = snapshot.val();
   const key = snapshot.key;
-  if (!data) return;
+  if (!data || !chatBox) return;
 
   const div = document.createElement("div");
   div.className = "msg";
@@ -178,21 +178,18 @@ onChildAdded(messagesRef, (snapshot) => {
     nameSpan.className = "sender";
     nameSpan.textContent = `${data.sender}: `;
     if (data.admin) {
-      nameSpan.style.color = "#FFD700"; // gold color for admin
+      nameSpan.style.color = "#FFD700"; // Gold color
       nameSpan.style.fontWeight = "bold";
     }
-    div.appendChild(nameSpan);
 
     const textSpan = document.createElement("span");
     textSpan.className = "text";
     textSpan.style.fontWeight = data.admin ? "bold" : "normal";
+    textSpan.innerHTML = data.text.replace(/@(\w+)/g, '<span class="tagged">@$1</span>');
 
-    // Tagging styling
-    let finalText = data.text.replace(/@(\w+)/g, '<span class="tagged">@$1</span>');
-    textSpan.innerHTML = finalText;
+    div.appendChild(nameSpan);
     div.appendChild(textSpan);
 
-    // Admin can delete any message by clicking
     if (isAdmin) {
       div.addEventListener("click", () => {
         if (confirm("Delete this message?")) {
@@ -206,7 +203,7 @@ onChildAdded(messagesRef, (snapshot) => {
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 
-  // Auto remove message after 1 hour (UI cleanup too)
+  // Auto remove message after 1 hour
   const timeLeft = 60 * 60 * 1000 - (Date.now() - data.timestamp);
   if (timeLeft > 0) {
     setTimeout(() => {
@@ -217,20 +214,22 @@ onChildAdded(messagesRef, (snapshot) => {
 });
 
 // ----------------- Clear All Messages (Admin Only) -----------------
-if (isAdmin) {
-  const clearBtn = document.createElement("button");
-  clearBtn.textContent = "Clear All Messages";
-  clearBtn.style.background = "#FFD700";
-  clearBtn.style.color = "#000";
-  clearBtn.style.border = "none";
-  clearBtn.style.padding = "5px 10px";
-  clearBtn.style.margin = "5px";
-  clearBtn.style.cursor = "pointer";
-  clearBtn.addEventListener("click", () => {
-    if (confirm("Are you sure you want to delete all messages?")) {
-      remove(messagesRef);
-      chatBox.innerHTML = "";
-    }
-  });
-  document.body.prepend(clearBtn);
+window.addEventListener("load", () => {
+  if (isAdmin) {
+    const clearBtn = document.createElement("button");
+    clearBtn.textContent = "Clear All Messages";
+    clearBtn.style.background = "#FFD700";
+    clearBtn.style.color = "#000";
+    clearBtn.style.border = "none";
+    clearBtn.style.padding = "5px 10px";
+    clearBtn.style.margin = "5px";
+    clearBtn.style.cursor = "pointer";
+    clearBtn.addEventListener("click", () => {
+      if (confirm("Are you sure you want to delete all messages?")) {
+        remove(messagesRef);
+        if (chatBox) chatBox.innerHTML = "";
+      }
+    });
+    document.body.prepend(clearBtn);
+  }
 });

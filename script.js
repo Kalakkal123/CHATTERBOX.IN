@@ -23,7 +23,7 @@ import {
 
 // paste the keys here //
 const firebaseConfig = {
-    apiKey: "AIzaSyBCJI2YgCLUyI0U9ufRfCujRjDDTeP-lNY",
+  apiKey: "AIzaSyBCJI2YgCLUyI0U9ufRfCujRjDDTeP-lNY",
   authDomain: "kalakkal1-d6e19.firebaseapp.com",
   databaseURL: "https://kalakkal1-d6e19-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "kalakkal1-d6e19",
@@ -107,7 +107,9 @@ input?.addEventListener("input", () => {
 
 onValue(typingRef, snapshot => {
   const typingUsers = snapshot.val() || {};
-  const others = Object.keys(typingUsers).filter(u => typingUsers[u] && u !== username);
+  const others = Object.keys(typingUsers).filter(
+    u => typingUsers[u] && u !== username
+  );
   if (others.length > 0) {
     typingText.textContent = `${others.join(", ")} typing...`;
     typingIndicator.style.display = "block";
@@ -121,7 +123,9 @@ onValue(presenceRef, snapshot => {
   const users = snapshot.val() || {};
   const count = Object.keys(users).length;
   onlineCount.textContent = `Online: [${count} Users]`;
-  if (count > onlineUsersBefore && onlineUsersBefore !== 0) joinSound.play().catch(()=>{});
+  if (count > onlineUsersBefore && onlineUsersBefore !== 0) {
+    joinSound.play().catch(() => {});
+  }
   onlineUsersBefore = count;
 });
 
@@ -150,14 +154,16 @@ function sendMessage() {
   input.value = "";
   set(ref(database, `typing/${username}`), false);
 
-  if (isAdmin) adminDing.play().catch(()=>{});
+  if (isAdmin) adminDing.play().catch(() => {});
 
   // Auto delete 1 hour later
-  setTimeout(() => remove(messageRef), 60*60*1000);
+  setTimeout(() => remove(messageRef), 60 * 60 * 1000);
 }
 
 sendBtn?.addEventListener("click", sendMessage);
-input?.addEventListener("keypress", e => { if(e.key==="Enter") sendMessage(); });
+input?.addEventListener("keypress", e => {
+  if (e.key === "Enter") sendMessage();
+});
 
 // ----------------- Display Messages -----------------
 onChildAdded(messagesRef, snapshot => {
@@ -169,6 +175,7 @@ onChildAdded(messagesRef, snapshot => {
   div.className = "msg";
   div.id = `msg-${key}`;
   if (data.sender === username) div.classList.add("self");
+
   if (data.type === "system") {
     div.style.textAlign = "center";
     div.style.opacity = "0.8";
@@ -177,13 +184,14 @@ onChildAdded(messagesRef, snapshot => {
     const nameSpan = document.createElement("span");
     nameSpan.className = "sender";
     nameSpan.textContent = `${data.sender}: `;
-    if (data.admin) {
-      nameSpan.classList.add("admin");
-    }
+    if (data.admin) nameSpan.classList.add("admin");
 
     const textSpan = document.createElement("span");
     textSpan.className = "text";
-    textSpan.innerHTML = data.text.replace(/@(\w+)/g, '<span class="tagged">@$1</span>');
+    textSpan.innerHTML = data.text.replace(
+      /@(\w+)/g,
+      '<span class="tagged">@$1</span>'
+    );
 
     div.appendChild(nameSpan);
     div.appendChild(textSpan);
@@ -203,7 +211,7 @@ onChildAdded(messagesRef, snapshot => {
   chatBox.scrollTop = chatBox.scrollHeight;
 
   // Auto remove after 1 hour
-  const timeLeft = 60*60*1000 - (Date.now() - data.timestamp);
+  const timeLeft = 60 * 60 * 1000 - (Date.now() - data.timestamp);
   if (timeLeft > 0) {
     setTimeout(() => {
       remove(ref(database, `messages/${key}`));

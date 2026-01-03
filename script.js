@@ -23,7 +23,14 @@ import {
 
 // paste the keys here //
 const firebaseConfig = {
-  
+    apiKey: "AIzaSyBCJI2YgCLUyI0U9ufRfCujRjDDTeP-lNY",
+  authDomain: "kalakkal1-d6e19.firebaseapp.com",
+  databaseURL: "https://kalakkal1-d6e19-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "kalakkal1-d6e19",
+  storageBucket: "kalakkal1-d6e19.appspot.com",
+  messagingSenderId: "979373423767",
+  appId: "1:979373423767:web:52485a1a022670f2b6fdd2",
+};
 };
 // ================== //
 
